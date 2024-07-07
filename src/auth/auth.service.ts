@@ -2,10 +2,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { TypeLoginUser, TypeValidateGitHubUser } from 'src/types/auth.types'
+import { TypeUserData } from 'src/types/user.types'
 import { CreateUserDto } from 'src/user/dto/create-user.dto'
 import { User } from 'src/user/user.entity'
 import { UserService } from 'src/user/user.service'
-import { LoginUserDto } from './dto/auth.dto'
+import { CloseSessionDto, LoginUserDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {
@@ -53,7 +54,7 @@ export class AuthService {
 				dto.email
 			)
 		})
-		return this.loginUser(user as Partial<User>)
+		return this.loginUser(user as TypeUserData)
 	}
 
 	async updateTokens(refreshToken: string) {
@@ -70,7 +71,32 @@ export class AuthService {
 		return this.generateToken(payload)
 	}
 
-	async loginUser(user: Partial<User>): TypeLoginUser {
+	async closeSession(dto: CloseSessionDto) {
+		const payload = this.jwtService.decode(dto.accessToken)
+		const user = await this.userService.findOneById(payload.sub)
+		if (
+			!user ||
+			!(await bcrypt.compare(dto.accessToken, user.secreteKeyJwtHash))
+		) {
+			throw new UnauthorizedException('Invalid token')
+		}
+
+		const newSecreteKeyJwtHash = await this.createSecreteKeyJwtHash(
+			payload.sub,
+			user.email
+		)
+		await this.userService.updateUser(user.id, {
+			secreteKeyJwtHash: newSecreteKeyJwtHash
+		})
+		return dto.isAllSessions
+			? null
+			: this.generateToken({
+					...payload,
+					secreteKeyJwtHash: newSecreteKeyJwtHash
+				})
+	}
+
+	async loginUser(user: TypeUserData): TypeLoginUser {
 		const payload = {
 			username: user.username,
 			sub: user.id,
@@ -79,7 +105,7 @@ export class AuthService {
 		return this.generateToken(payload)
 	}
 
-	async generateToken(payload: any) {
+	async generateToken(payload: JWTTokenPayload) {
 		return {
 			accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }),
 			refreshToken: this.jwtService.sign(payload, { expiresIn: '30d' })

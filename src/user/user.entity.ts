@@ -1,22 +1,48 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Chat } from 'src/chat/chat.entity'
+import { Message } from 'src/message/message.entity'
+import {
+	Column,
+	Entity,
+	ManyToMany,
+	OneToMany,
+	PrimaryGeneratedColumn
+} from 'typeorm'
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+	@PrimaryGeneratedColumn()
+	id: number
 
-  @Column({ unique: true })
-  email: string;
-
-  @Column()
-  password: string;
-
-  @Column({ nullable: true })
-  githubId: string;
-
-  @Column()
-  username: string;
+	@Column({ unique: true })
+	email: string
 
 	@Column()
-	secreteKeyJwtHash: string;
+	password: string
+
+	@Column({ nullable: true })
+	githubId: string
+
+	@Column({
+		default: ''
+	})
+	username: string
+
+	@Column({
+		default: ''
+	})
+	picture: string
+
+	@Column({
+		default: ''
+	})
+	fullName: string
+
+	@Column()
+	secreteKeyJwtHash: string
+
+	@ManyToMany(() => Chat, chat => chat.users)
+	chats: Chat[]
+
+	@OneToMany(() => Message, message => message.user)
+	messages: Message[]
 }

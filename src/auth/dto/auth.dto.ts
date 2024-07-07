@@ -10,6 +10,11 @@ export class LoginUserDto {
 }
 
 export class TokenUserDto {
-  @IsString()
-  userId: string;
+	@IsString()
+	userId: string
+}
+
+export class CloseSessionDto {
+	accessToken: string
+	isAllSessions: boolean
 }
