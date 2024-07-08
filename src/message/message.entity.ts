@@ -15,4 +15,10 @@ export class Message {
 
 	@ManyToOne(() => User, user => user.messages)
 	user: User
+
+	@Column({
+		type: 'boolean',
+		default: false
+	})
+	isRead: boolean
 }

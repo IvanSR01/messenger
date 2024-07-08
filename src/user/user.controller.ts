@@ -13,19 +13,19 @@ export class UserController {
 		return await this.userService.findAll(search)
 	}
 
-	@Get('profile')
+	@Get('info-profile')
 	@Auth()
 	async profile(@UserData('id') id: number) {
 		return await this.userService.findOneById(id)
 	}
 
-	@Put('profile')
+	@Put('update-profile')
 	@Auth()
 	async updateProfile(@UserData('id') id: number, @Body() dto: TypeUserData) {
 		return await this.userService.updateUser(id, dto)
 	}
 
-	@Delete('profile')
+	@Delete('delete-profile')
 	@Auth()
 	async deleteProfile(@UserData('id') id: number) {
 		return await this.userService.deleteUser(id)
