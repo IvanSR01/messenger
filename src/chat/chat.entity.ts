@@ -21,9 +21,21 @@ export class Chat {
 	@OneToMany(() => Message, message => message.chat)
 	messages: Message[]
 
+	@Column()
+	name: string
+
+	@Column()
+	img: string
+
+	@Column({
+		type: 'boolean',
+		default: false
+	})
+	isPersonal: boolean
+
 	@Column({
 		type: 'date',
 		default: () => 'CURRENT_TIMESTAMP'
 	})
-	createAt: Date
+	createdAt: Date
 }

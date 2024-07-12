@@ -45,4 +45,7 @@ export class User {
 
 	@OneToMany(() => Message, message => message.user)
 	messages: Message[]
+
+	@ManyToMany(() => User, user => user.contact)
+	contact: User[]
 }

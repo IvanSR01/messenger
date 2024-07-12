@@ -3,3 +3,5 @@ declare type JWTTokenPayload = {
 	sub: number
 	secreteKeyJwtHash: string
 }
+
+declare type SocketPayload = { content: string; chatId: number; userId: number }
