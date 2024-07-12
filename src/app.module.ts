@@ -9,6 +9,7 @@ import { Chat } from './chat/chat.entity';
 import { Message } from './message/message.entity';
 import { ChatModule } from './chat/chat.module';
 import { MessageModule } from './message/message.module'; // Импортировать MessageModule
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { MessageModule } from './message/message.module'; // Импортиро�
     AuthModule,
     UserModule,
     ChatModule,
-    MessageModule // Добавить MessageModule
+    MessageModule,
+    UploadModule // Добавить MessageModule
   ],
 })
 export class AppModule {}
