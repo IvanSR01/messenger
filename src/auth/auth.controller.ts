@@ -46,7 +46,7 @@ export class AuthController {
 		const tokens = await this.authService.githubLogin(user)
 		const redirectUrl = this.configService.get<string>('REDIRECT_URL')
 		res.redirect(
-			`${'http://localhost:3000/'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
+			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
 		)
 	}
 
