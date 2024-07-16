@@ -17,6 +17,9 @@ export class User {
 	email: string
 
 	@Column()
+	isVerified: boolean
+
+	@Column()
 	password: string
 
 	@Column({ nullable: true })
