@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+	ConflictException,
+	Injectable,
+	UnauthorizedException
+} from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { TypeLoginUser, TypeValidateGitHubUser } from 'src/types/auth.types'
@@ -42,19 +46,32 @@ export class AuthService {
 		if (!isValid) {
 			throw new UnauthorizedException('Invalid password')
 		}
+		if (!user.isVerified) throw new UnauthorizedException('User not verified')
 		return this.loginUser(user)
 	}
 
 	async registration(dto: CreateUserDto) {
+		const oldUser = ((await this.userService.findOneByEmail(dto.email)) ||
+			(await this.userService.findOneByUsername(dto.username))) as User
+		if (oldUser)
+			throw new ConflictException('Email or username is already in use')
 		const user = await this.userService.createUser({
 			...dto,
 			password: await bcrypt.hash(dto.password, await bcrypt.genSalt(10)),
 			secreteKeyJwtHash: await this.createSecreteKeyJwtHash(
 				dto.password,
 				dto.email
-			)
+			),
+			isVerified: true
 		})
-		return this.loginUser(user as TypeUserData)
+		return 'User created successfully'
+	}
+
+	async verifyUser(email: string) {
+		const user = await this.userService.findOneByEmail(email)
+		if (!user) throw new UnauthorizedException('User not found')
+		await this.userService.updateUser(user.id, { isVerified: true })
+		return this.loginUser(user)
 	}
 
 	async updateTokens(refreshToken: string) {
