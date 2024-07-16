@@ -12,13 +12,13 @@ export class ChatController {
 	@Get('all')
 	@Auth()
 	async findAll(@UserData('id') id: number) {
-		return this.chatService.findAll(id)
+		return await this.chatService.findAll(id)
 	}
 
 	@Get(':id')
 	@Auth()
 	async findOne(@Param('id') chatId: number) {
-		return this.chatService.findOne(chatId)
+		return await this.chatService.findOne(chatId)
 	}
 
 	@Get('user-chat/:id')

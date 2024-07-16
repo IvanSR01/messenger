@@ -46,18 +46,16 @@ export class AuthController {
 		const tokens = await this.authService.githubLogin(user)
 		const redirectUrl = this.configService.get<string>('REDIRECT_URL')
 		res.redirect(
-			`${redirectUrl}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
+			`${'http://localhost:3000/'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
 		)
 	}
 
-	@Auth()
 	@Post('refresh-token')
 	@HttpCode(HttpStatus.OK)
-	async refreshToken(@Body() tokenUserDto: TokenUserDto) {
-		return await this.authService.updateTokens(tokenUserDto.userId)
+	async refreshToken(@Body() tokenUserDto: any) {
+		return await this.authService.updateTokens(tokenUserDto.refreshToken)
 	}
 
-	@Auth()
 	@Post('close-session')
 	@HttpCode(HttpStatus.OK)
 	async closeSession(@Body() dto: CloseSessionDto) {

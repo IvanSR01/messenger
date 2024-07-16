@@ -9,7 +9,13 @@ export class UserService {
 		@InjectRepository(User) private userRepository: Repository<User>
 	) {}
 	async findOneById(id: number) {
+		console.log(id)
 		return await this.userRepository.findOneBy({ id: id })
+	}
+	async findOneByOAuth(id: string) {
+		return await this.userRepository.findOneBy({
+			githubId: id
+		})
 	}
 	async findOneByEmail(email: string) {
 		return await this.userRepository.findOneBy({ email })
@@ -21,7 +27,7 @@ export class UserService {
 	}
 
 	async createUser(dto: Partial<User>) {
-		const user = this.findOneByEmail(dto.email)
+		const user = await this.findOneByEmail(dto.email)
 		if (!user) {
 			return await this.userRepository.save(dto)
 		}

@@ -24,11 +24,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		if (!user) {
 			throw new UnauthorizedException('User not found')
 		}
-
-		const isHashValid = await bcrypt.compare(
-			payload.secreteKeyJwtHash,
-			user.secreteKeyJwtHash
-		)
+		const isHashValid = payload.secreteKeyJwtHash === user.secreteKeyJwtHash
+		console.log(payload.secreteKeyJwtHash, user.secreteKeyJwtHash)
 		if (!isHashValid) {
 			throw new UnauthorizedException('Invalid token')
 		}

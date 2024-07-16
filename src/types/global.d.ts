@@ -1,4 +1,5 @@
 declare type JWTTokenPayload = {
+	exp?: any
 	username: string
 	sub: number
 	secreteKeyJwtHash: string

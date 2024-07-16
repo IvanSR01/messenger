@@ -19,10 +19,11 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
 		})
 	}
 
-	async validate(profile: any, done: Function) {
+	async validate(_: any, w: any, profile: any, done: Function) {
 		const { username, emails, photos } = profile
-		const user: TypeValidateGitHubUser = {
-			email: emails[0].value,
+		console.log(profile)
+		const user = {
+			email: profile._json.email || '',
 			username: username,
 			picture: photos[0].value,
 			id: profile.id

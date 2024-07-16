@@ -16,10 +16,10 @@ export class AuthService {
 	) {}
 
 	async githubLogin(user: TypeValidateGitHubUser) {
-		const existingUser = await this.userService.findOneByEmail(user.email)
+		const existingUser = await this.userService.findOneByOAuth(user.id)
 		if (!existingUser) {
 			const newUser = await this.userService.createUser({
-				email: user.email,
+				email: user.email || '',
 				username: user.username,
 				githubId: user.id,
 				password: await bcrypt.hash(user.id, await bcrypt.genSalt(10)),
@@ -28,9 +28,9 @@ export class AuthService {
 					user.email
 				)
 			})
-			return this.loginUser(newUser as Partial<User>)
+			return this.validatePayload(newUser as Partial<User>)
 		}
-		return this.loginUser(existingUser)
+		return this.validatePayload(existingUser)
 	}
 
 	async login(dto: LoginUserDto) {
@@ -42,7 +42,7 @@ export class AuthService {
 		if (!isValid) {
 			throw new UnauthorizedException('Invalid password')
 		}
-		return this.loginUser(user)
+		return this.validatePayload(user)
 	}
 
 	async registration(dto: CreateUserDto) {
@@ -54,17 +54,15 @@ export class AuthService {
 				dto.email
 			)
 		})
-		return this.loginUser(user as TypeUserData)
+		return this.validatePayload(user as TypeUserData)
 	}
 
 	async updateTokens(refreshToken: string) {
 		const payload = this.jwtService.decode(refreshToken)
 		const user = await this.userService.findOneById(payload.sub)
+		const isValid = user.secreteKeyJwtHash === payload.secreteKeyJwtHash
 
-		if (
-			!user ||
-			!(await bcrypt.compare(payload.secreteKeyJwtHash, user.secreteKeyJwtHash))
-		) {
+		if (!user || !isValid) {
 			throw new UnauthorizedException('Invalid token')
 		}
 
@@ -74,10 +72,9 @@ export class AuthService {
 	async closeSession(dto: CloseSessionDto) {
 		const payload = this.jwtService.decode(dto.accessToken)
 		const user = await this.userService.findOneById(payload.sub)
-		if (
-			!user ||
-			!(await bcrypt.compare(dto.accessToken, user.secreteKeyJwtHash))
-		) {
+		const isValid = user.secreteKeyJwtHash === payload.secreteKeyJwtHash
+
+		if (!user || !isValid) {
 			throw new UnauthorizedException('Invalid token')
 		}
 
@@ -96,7 +93,7 @@ export class AuthService {
 				})
 	}
 
-	async loginUser(user: TypeUserData): TypeLoginUser {
+	async validatePayload(user: TypeUserData): TypeLoginUser {
 		const payload = {
 			username: user.username,
 			sub: user.id,
@@ -106,9 +103,11 @@ export class AuthService {
 	}
 
 	async generateToken(payload: JWTTokenPayload) {
+		// Убедимся, что свойство exp отсутствует
+		const { exp, ...restPayload } = payload
 		return {
-			accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }),
-			refreshToken: this.jwtService.sign(payload, { expiresIn: '30d' })
+			accessToken: this.jwtService.sign(restPayload, { expiresIn: '1h' }),
+			refreshToken: this.jwtService.sign(restPayload, { expiresIn: '30d' })
 		}
 	}
 
