@@ -40,12 +40,12 @@ export class AuthService {
 			})
 			return {
 				tokens: await this.validatePayload(existingUser),
-				isVerfied: false
+				isVerified: false
 			}
 		}
 		return {
 			tokens: await this.validatePayload(existingUser),
-			isVerfied: existingUser.isVerified
+			isVerified: existingUser.isVerified
 		}
 	}
 	async googleLogin(user: TypeValidateGoogleUser) {
@@ -63,13 +63,13 @@ export class AuthService {
 				isVerified: false
 			})
 			return {
-				tokens: await this.validatePayload(existingUser),
-				isVerfied: false
+				tokens: await this.validatePayload(newUser as TypeUserData),
+				isVerified: false
 			}
 		}
 		return {
 			tokens: await this.validatePayload(existingUser),
-			isVerfied: existingUser.isVerified
+			isVerified: existingUser.isVerified
 		}
 	}
 	async login(dto: LoginUserDto) {
@@ -81,8 +81,10 @@ export class AuthService {
 		if (!isValid) {
 			throw new UnauthorizedException('Invalid password')
 		}
-		if (!user.isVerified) throw new UnauthorizedException('User not verified')
-		return this.validatePayload(user)
+		return {
+			tokens: await this.validatePayload(user),
+			isVerified: user.isVerified
+		}
 	}
 
 	async registration(dto: CreateUserDto) {
@@ -97,27 +99,33 @@ export class AuthService {
 				dto.password,
 				dto.email
 			),
-			isVerified: true
+			isVerified: false
 		})
-		return 'User created successfully'
+		return {
+			tokens: await this.validatePayload(user as TypeUserData),
+			isVerified: false
+		}
 	}
 
-	async verifyUser(email: string) {
-		const user = await this.userService.findOneByEmail(email)
+	async verifyUser(id: number) {
+		const user = await this.userService.findOneById(id)
 		if (!user) throw new UnauthorizedException('User not found')
 		await this.userService.updateUser(user.id, { isVerified: true })
 		return this.validatePayload(user)
 	}
 
-	async getCode(email: string) {
-		const user = await this.userService.findOneByEmail(email)
+	async getCode(id: number) {
+		const user = await this.userService.findOneById(id)
 		if (!user) throw new UnauthorizedException('User not found')
+		const code = this.genCode()
+		console.log(user.email)
 		this.mailService.sendMail({
 			to: user.email,
+			from: "'No Reply' <Yq7pU@example.com>",
 			subject: 'Verify email',
-			text: `Your code is ${this.genCode()}`
+			text: `Your code is ${code}`
 		})
-		return 'Code sent successfully'
+		return code
 	}
 
 	async updateTokens(refreshToken: string) {

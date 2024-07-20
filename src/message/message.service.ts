@@ -13,6 +13,7 @@ export class MessageService {
   ) {}
 
   async create(content: string, chat: Chat, user: User): Promise<Message> {
+		console.log(content)
     const message = this.messageRepository.create({ content, chat, user });
     return this.messageRepository.save(message);
   }

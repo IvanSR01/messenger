@@ -13,6 +13,7 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto'
 import { AuthService } from './auth.service'
 import { Auth } from './decorators/auth.decorator'
 import { CloseSessionDto, LoginUserDto, TokenUserDto } from './dto/auth.dto'
+import { UserData } from 'src/user/decorators/user.decorator'
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +34,20 @@ export class AuthController {
 		return await this.authService.login(loginUserDto)
 	}
 
+	@Auth()
+	@Post('get-code')
+	@HttpCode(HttpStatus.OK)
+	async getCode(@UserData('id') id: number) {
+		return await this.authService.getCode(id)
+	}
+
+	@Auth()
+	@Post('verify-user')
+	@HttpCode(HttpStatus.OK)
+	async verifyUser(@UserData('id') id: number) {
+		return await this.authService.verifyUser(id)
+	}
+
 	@Auth('GITHUB')
 	@Get('github')
 	async githubAuth() {
@@ -43,10 +58,11 @@ export class AuthController {
 	@Get('github/callback')
 	async githubAuthRedirect(@Req() req, @Res() res) {
 		const user = req.user
-		const { tokens, isVerfied } = await this.authService.githubLogin(user)
+		const { tokens, isVerified } = await this.authService.githubLogin(user)
 		const redirectUrl = this.configService.get<string>('REDIRECT_URL')
+		if (isVerified) res.redirect('http://localhost:3000/dashboard/main')
 		res.redirect(
-			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}&isVerfied=${isVerfied}`
+			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
 		)
 	}
 

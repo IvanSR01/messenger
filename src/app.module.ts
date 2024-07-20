@@ -13,6 +13,7 @@ import { User } from './user/user.entity'
 import { UserModule } from './user/user.module'
 import { PinnedService } from './pinned/pinned.service';
 import { PinnedModule } from './pinned/pinned.module';
+import { PinnedChat } from './pinned/pinned.entity'
 
 @Module({
 	imports: [
@@ -29,7 +30,7 @@ import { PinnedModule } from './pinned/pinned.module';
 			username: 'postgres',
 			password: '1231231',
 			database: 'message',
-			entities: [User, Chat, Message],
+			entities: [User, Chat, Message, PinnedChat],
 			synchronize: true
 		}),
 		// Другие модули
@@ -39,8 +40,8 @@ import { PinnedModule } from './pinned/pinned.module';
 		MessageModule,
 		MailModule,
 		UploadModule,
-		PinnedModule // Добавить MessageModule,
+		// PinnedModule // Добавить MessageModule,
 	],
-	providers: [PinnedService]
+	providers: []
 })
 export class AppModule {}
