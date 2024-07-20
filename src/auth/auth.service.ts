@@ -5,18 +5,24 @@ import {
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
-import { TypeLoginUser, TypeValidateGitHubUser } from 'src/types/auth.types'
+import {
+	TypeLoginUser,
+	TypeValidateGitHubUser,
+	TypeValidateGoogleUser
+} from 'src/types/auth.types'
 import { TypeUserData } from 'src/types/user.types'
 import { CreateUserDto } from 'src/user/dto/create-user.dto'
 import { User } from 'src/user/user.entity'
 import { UserService } from 'src/user/user.service'
-import { CloseSessionDto, LoginUserDto } from './dto/auth.dto'
+import { CloseSessionDto, CreateGoogleDto, LoginUserDto } from './dto/auth.dto'
+import { MailService } from 'src/mail/mail.service'
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly userService: UserService,
-		private readonly jwtService: JwtService
+		private readonly jwtService: JwtService,
+		private readonly mailService: MailService
 	) {}
 
 	async githubLogin(user: TypeValidateGitHubUser) {
@@ -25,18 +31,47 @@ export class AuthService {
 			const newUser = await this.userService.createUser({
 				email: user.email || '',
 				username: user.username,
-				githubId: user.id,
+				oauthId: user.id,
 				password: await bcrypt.hash(user.id, await bcrypt.genSalt(10)),
 				secreteKeyJwtHash: await this.createSecreteKeyJwtHash(
 					user.id,
 					user.email
 				)
 			})
-			return this.validatePayload(newUser as Partial<User>)
+			return {
+				tokens: await this.validatePayload(existingUser),
+				isVerfied: false
+			}
 		}
-		return this.validatePayload(existingUser)
+		return {
+			tokens: await this.validatePayload(existingUser),
+			isVerfied: existingUser.isVerified
+		}
 	}
-
+	async googleLogin(user: TypeValidateGoogleUser) {
+		const existingUser = await this.userService.findOneByOAuth(user.id)
+		if (!existingUser) {
+			const newUser = await this.userService.createUser({
+				email: user.email || '',
+				username: `${user.firstName} ${user.lastName}`,
+				oauthId: user.id,
+				password: await bcrypt.hash(user.id, await bcrypt.genSalt(10)),
+				secreteKeyJwtHash: await this.createSecreteKeyJwtHash(
+					user.id,
+					user.email
+				),
+				isVerified: false
+			})
+			return {
+				tokens: await this.validatePayload(existingUser),
+				isVerfied: false
+			}
+		}
+		return {
+			tokens: await this.validatePayload(existingUser),
+			isVerfied: existingUser.isVerified
+		}
+	}
 	async login(dto: LoginUserDto) {
 		const user = await this.userService.findOneByEmail(dto.email)
 		if (!user) {
@@ -72,6 +107,17 @@ export class AuthService {
 		if (!user) throw new UnauthorizedException('User not found')
 		await this.userService.updateUser(user.id, { isVerified: true })
 		return this.validatePayload(user)
+	}
+
+	async getCode(email: string) {
+		const user = await this.userService.findOneByEmail(email)
+		if (!user) throw new UnauthorizedException('User not found')
+		this.mailService.sendMail({
+			to: user.email,
+			subject: 'Verify email',
+			text: `Your code is ${this.genCode()}`
+		})
+		return 'Code sent successfully'
 	}
 
 	async updateTokens(refreshToken: string) {
@@ -119,7 +165,7 @@ export class AuthService {
 		return this.generateToken(payload)
 	}
 
-	async generateToken(payload: JWTTokenPayload) {
+	private async generateToken(payload: JWTTokenPayload) {
 		// Убедимся, что свойство exp отсутствует
 		const { exp, ...restPayload } = payload
 		return {
@@ -128,7 +174,10 @@ export class AuthService {
 		}
 	}
 
-	async createSecreteKeyJwtHash(id: string, email: string) {
+	private async createSecreteKeyJwtHash(id: string, email: string) {
 		return bcrypt.hash(id + email, await bcrypt.genSalt(10))
+	}
+	private genCode() {
+		return Math.floor(100000 + Math.random() * 900000)
 	}
 }

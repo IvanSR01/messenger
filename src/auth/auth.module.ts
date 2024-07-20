@@ -9,6 +9,9 @@ import { JwtAuthGuard } from './guard/jwt-auth.guard'
 import { UserModule } from 'src/user/user.module'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { GithubStrategy } from './strategies/github.strategy'
+import { GoogleStrategy } from './strategies/google.startegy'
+import { GoogleAuthGuard } from './guard/google-auth.guard'
+import { MailModule } from 'src/mail/mail.module'
 
 @Module({
 	imports: [
@@ -22,7 +25,8 @@ import { GithubStrategy } from './strategies/github.strategy'
 			}),
 			inject: [ConfigService]
 		}),
-		ConfigModule
+		ConfigModule,
+		MailModule
 	],
 	controllers: [AuthController],
 	providers: [
@@ -30,7 +34,9 @@ import { GithubStrategy } from './strategies/github.strategy'
 		JwtStrategy,
 		GithubStrategy,
 		GithubAuthGuard,
-		JwtAuthGuard
+		JwtAuthGuard,
+		GoogleStrategy,
+		GoogleAuthGuard
 	]
 })
 export class AuthModule {}

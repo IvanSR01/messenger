@@ -25,8 +25,8 @@ import { UserModule } from './user/user.module'
 			host: 'localhost',
 			port: 5432,
 			username: 'postgres',
-			password: '070707',
-			database: 'messenger',
+			password: '1231231',
+			database: 'message',
 			entities: [User, Chat, Message],
 			synchronize: true
 		}),

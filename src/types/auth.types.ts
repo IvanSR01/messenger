@@ -8,3 +8,11 @@ export type TypeValidateGitHubUser = {
 	username: string
 	picture: string
 }
+
+export type TypeValidateGoogleUser = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+}

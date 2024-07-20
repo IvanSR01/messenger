@@ -18,3 +18,14 @@ export class CloseSessionDto {
 	accessToken: string
 	isAllSessions: boolean
 }
+
+
+export class CreateGoogleDto {
+	id: string;
+	@IsEmail()
+  email: string;
+	@IsString()
+  firstName: string;
+  lastName: string;
+  picture: string;
+}

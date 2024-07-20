@@ -43,10 +43,10 @@ export class AuthController {
 	@Get('github/callback')
 	async githubAuthRedirect(@Req() req, @Res() res) {
 		const user = req.user
-		const tokens = await this.authService.githubLogin(user)
+		const { tokens, isVerfied } = await this.authService.githubLogin(user)
 		const redirectUrl = this.configService.get<string>('REDIRECT_URL')
 		res.redirect(
-			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
+			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}&isVerfied=${isVerfied}`
 		)
 	}
 

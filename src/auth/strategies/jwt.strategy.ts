@@ -21,12 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
 	async validate(payload: any) {
 		const user = await this.userService.findOneById(payload.sub)
-		console.log(payload)
 		if (!user) {
 			throw new UnauthorizedException('User not found')
 		}
 		const isHashValid = payload.secreteKeyJwtHash === user.secreteKeyJwtHash
-		console.log(payload.secreteKeyJwtHash, user.secreteKeyJwtHash)
 		if (!isHashValid) {
 			throw new UnauthorizedException('Invalid token')
 		}

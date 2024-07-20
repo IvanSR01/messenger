@@ -12,13 +12,15 @@ export class UserService {
 	constructor(
 		@InjectRepository(User) private userRepository: Repository<User>
 	) {}
-	async findOneById(id: number) {
-		console.log(id)
-		return await this.userRepository.findOneBy({ id: id })
+	async findOneById(id: number): Promise<User> {
+		return this.userRepository.findOne({
+			where: { id },
+			relations: ['contact'] // Загрузить поле contact
+		})
 	}
 	async findOneByOAuth(id: string) {
 		return await this.userRepository.findOneBy({
-			githubId: id
+			oauthId: id
 		})
 	}
 	async findOneByUsername(username: string) {
@@ -31,6 +33,13 @@ export class UserService {
 		return await this.userRepository.find({})
 	}
 
+  async areUsersInContacts(userId: number, contactId: number): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+			where: { id: userId },
+			relations: ['contact'],
+		});
+    return user?.contact.some(contact => contact.id === contactId) ?? false;
+  }
 	async createUser(dto: Partial<User>) {
 		const user = await this.findOneByEmail(dto.email)
 		if (!user) {
