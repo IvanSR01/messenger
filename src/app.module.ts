@@ -11,6 +11,8 @@ import { MessageModule } from './message/message.module' // Импортиров
 import { UploadModule } from './upload/upload.module'
 import { User } from './user/user.entity'
 import { UserModule } from './user/user.module'
+import { PinnedService } from './pinned/pinned.service';
+import { PinnedModule } from './pinned/pinned.module';
 
 @Module({
 	imports: [
@@ -36,7 +38,9 @@ import { UserModule } from './user/user.module'
 		ChatModule,
 		MessageModule,
 		MailModule,
-		UploadModule // Добавить MessageModule,
-	]
+		UploadModule,
+		PinnedModule // Добавить MessageModule,
+	],
+	providers: [PinnedService]
 })
 export class AppModule {}

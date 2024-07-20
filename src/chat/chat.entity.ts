@@ -1,6 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, JoinTable } from 'typeorm';
 import { Message } from 'src/message/message.entity';
 import { User } from 'src/user/user.entity';
+import { PinnedChat } from 'src/pinned/pinned.entity';
+
+// chat.entity.ts
 
 @Entity()
 export class Chat {
@@ -38,4 +41,7 @@ export class Chat {
     @ManyToMany(() => User)
     @JoinTable()
     typing: User[];
+
+    @OneToMany(() => PinnedChat, pinnedChat => pinnedChat.chat)
+    pinnedByUsers: PinnedChat[];
 }
