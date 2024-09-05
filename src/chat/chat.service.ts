@@ -24,15 +24,17 @@ export class ChatService {
 			relations: ['users', 'messages', 'typing', 'pinnedByUsers']
 		})
 
-		chats = chats.filter(chat => chat.users.includes(user))
-
-		chats.forEach(chat => {
+		const newChat = chats.filter(chat => {
+			console.log(chat.users.some(userId => userId.id === user.id)); // Например, если `user` - это объект с `id`
+		});
+		
+		newChat.forEach(chat => {
 			chat.messages.sort(
 				(a, b) =>
 					new Date(a.sendTime).getTime() - new Date(b.sendTime).getTime()
 			)
 		})
-		return chats
+		return newChat
 	}
 
 	async findOne(id: number): Promise<Chat> {
