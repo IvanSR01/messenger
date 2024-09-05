@@ -26,6 +26,7 @@ export class ChatService {
 
 		const newChat = chats.filter(chat => {
 			console.log(chat.users.some(userId => userId.id === user.id)); // Например, если `user` - это объект с `id`
+			return chat.users.some(userId => userId.id === user.id); // Предположим, что `chat.users` - это массив ID
 		});
 		
 		newChat.forEach(chat => {
