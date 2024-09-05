@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 import { AuthModule } from './auth/auth.module'
@@ -23,16 +23,20 @@ import { PinnedChat } from './pinned/pinned.entity'
 			envFilePath: '.env' // Указывает путь к файлу .env
 		}),
 		// Настройка TypeOrmModule
-		TypeOrmModule.forRoot({
-			type: 'postgres',
-			host: 'localhost',
-			port: 5432,
-			username: 'postgres',
-			password: '1231231',
-			database: 'message',
-			entities: [User, Chat, Message, PinnedChat],
-			synchronize: true
-		}),
+		TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
+        entities: [User, Chat, Message, PinnedChat],
+        synchronize: true, // В продакшене рекомендуется установить false
+      }),
+    }),
 		// Другие модули
 		AuthModule,
 		UserModule,
