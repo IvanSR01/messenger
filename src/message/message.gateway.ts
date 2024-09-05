@@ -1,6 +1,7 @@
-import { ChatService } from './../chat/chat.service'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import {
+	ConnectedSocket,
+	MessageBody,
 	OnGatewayConnection,
 	OnGatewayDisconnect,
 	OnGatewayInit,
@@ -10,17 +11,17 @@ import {
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
 import { UserService } from 'src/user/user.service'
+import { ChatService } from './../chat/chat.service'
 import { MessageService } from './message.service'
 
-@WebSocketGateway(4201, {
+@WebSocketGateway({
 	cors: {
 		origin: '*',
-		// methods: ['GET', 'POST'],
+		methods: ['GET', 'POST'],
 		credentials: true
 	},
 	transports: ['websocket', 'polling']
 })
-@Injectable()
 export class MessageGateway
 	implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -32,84 +33,221 @@ export class MessageGateway
 		private readonly chatService: ChatService
 	) {}
 
-	afterInit(server: Server) {
+	afterInit(): void {
 		console.log('WebSocket initialized')
 	}
 
-	handleConnection(client: Socket) {
-		console.log(`Client connected: ${client.id}`)
+	handleConnection(client: Socket): void {
+		// console.log(`Client connected: ${client.id}`)
 	}
 
-	handleDisconnect(client: Socket) {
-		console.log(`Client disconnected: ${client.id}`)
+	handleDisconnect(client: Socket): void {
+		// console.log(`Client disconnected: ${client.id}`)
 	}
 
-	@SubscribeMessage('send-message')
-	async handleSendMessage(
-		client: Socket,
-		payload: SocketPayload
+	@SubscribeMessage('join-room')
+	handleJoinRoom(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { userId }: { userId: number }
+	): void {
+		const roomName = `user_${userId}`
+		client.join(roomName)
+		console.log(`Client ${client.id} joined room ${roomName}`)
+	}
+
+	@SubscribeMessage('leave-room')
+	handleLeaveRoom(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { userId }: { userId: number }
+	): void {
+		const roomName = `user_${userId}`
+		client.leave(roomName)
+		console.log(`Client ${client.id} left room ${roomName}`)
+	}
+
+	@SubscribeMessage('get-chats')
+	async getChats(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { userId }: { userId: number }
 	): Promise<void> {
-		const chat = await this.chatService.findOne(payload.chatId)
-		const user = await this.userService.findOneById(payload.userId)
-		if (!chat) throw new NotFoundException('Chat not found')
-		else if (!user) throw new NotFoundException('User not found')
-		const message = await this.messageService.create(
-			payload.content,
-			chat,
-			user
-		)
-		this.server.to(`chat_${payload.content}`).emit('message', message)
+		try {
+			const chats = await this.chatService.findAll(userId)
+
+
+			this.server.to(`user_${userId}`).emit('get-chats', chats)
+		} catch (error) {
+			console.error('Error getting chats:', error)
+			this.server.emit('error', { message: error.message })
+		}
 	}
 
-	@SubscribeMessage('mark-as-read')
-	async handleMarkAsRead(
-		client: Socket,
-		payload: { messageId: number }
-	): Promise<void> {
-		await this.messageService.markAsRead(payload.messageId)
-		this.server.emit('messageRead', payload.messageId)
+	@SubscribeMessage('join-chat')
+	handleJoinChat(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { chatId }: { chatId: number }
+	): void {
+		const roomName = `chat_${chatId}`
+		client.join(roomName)
+		// console.log(`Client ${client.id} joined room ${roomName}`)
+	}
+
+	@SubscribeMessage('leave-chat')
+	handleLeaveChat(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { chatId }: { chatId: number }
+	): void {
+		const roomName = `chat_${chatId}`
+		client.leave(roomName)
+		// console.log(`Client ${client.id} left room ${roomName}`)
 	}
 
 	@SubscribeMessage('get-messages')
-	async handleGetMessages(
-		client: Socket,
-		payload: { chatId: number }
+	async getMessages(
+		@ConnectedSocket() client: Socket,
+		@MessageBody() { chatId }: { chatId: number }
 	): Promise<void> {
-		const chat = await this.chatService.findOne(payload.chatId)
-		if (!chat) throw new NotFoundException('Chat not found')
-		const messages = await this.messageService.findByChat(chat)
-		this.server.emit('messages', messages)
+		try {
+			const messages = await this.messageService.getMessage(chatId)
+			this.server.to(`chat_${chatId}`).emit('get-messages', messages)
+		} catch (error) {
+			console.error('Error getting messages:', error)
+			client.emit('error', { message: error.message })
+		}
+	}
+
+	@SubscribeMessage('send-message')
+	async sendMessage(
+		@ConnectedSocket() client: Socket,
+		@MessageBody()
+		{
+			chatId,
+			userId,
+			content
+		}: { chatId: number; userId: number; content: string }
+	): Promise<void> {
+		try {
+			const chat = await this.chatService.findOne(chatId)
+			const user = await this.userService.findOneById(userId)
+
+			if (!chat) {
+				throw new NotFoundException('Chat not found')
+			} else if (!user) {
+				throw new NotFoundException('User not found')
+			}
+
+			await this.messageService.create(content, chat, user)
+
+			// Отправка сообщения в комнату
+			this.server.to(`chat_${chatId}`).emit('new-message', {
+				chatId,
+				userId,
+				content
+			})
+			await chat.users.forEach(async user => {
+				await this.getChats(client, { userId: user.id })
+			})
+			// Обновление сообщений для всех в комнате
+			await this.getMessages(client, { chatId })
+		} catch (error) {
+			console.error('Error sending message:', error)
+			client.emit('error', { message: error.message })
+		}
+	}
+
+	// Остальные методы (update-message, mark-as-read, start-typing, stop-typing) остаются без изменений,
+	// так как они уже корректно работают с комнатами через this.server.to(`chat_${chatId}`).emit(...).
+
+	@SubscribeMessage('update-message')
+	async updateMessage(
+		@ConnectedSocket() client: Socket,
+		@MessageBody()
+		{
+			messageId,
+			content,
+			chatId,
+			userId
+		}: { messageId: number; content: string; chatId: number; userId: number }
+	): Promise<void> {
+		try {
+			await this.messageService.update(messageId, content)
+			// Обновление сообщений в комнате
+			await this.getMessages(client, { chatId })
+		} catch (error) {
+			console.error('Error updating message:', error)
+			client.emit('error', { message: error.message })
+		}
+	}
+
+	@SubscribeMessage('mark-as-read')
+	async markAsRead(
+		@ConnectedSocket() client: Socket,
+		@MessageBody()
+		{
+			messageId,
+			chatId,
+			isRefresh,
+			userId
+		}: { messageId: number; chatId: number; isRefresh: boolean; userId: number }
+	): Promise<void> {
+		try {
+			await this.messageService.markAsRead(messageId)
+			if (isRefresh) {
+				await this.getMessages(client, { chatId })
+			} else {
+				client.emit('mark-as-read', 'success')
+			}
+		} catch (error) {
+			console.error('Error marking message as read:', error)
+			client.emit('error', { message: error.message })
+		}
 	}
 
 	@SubscribeMessage('start-typing')
-	async handleStartTyping(
-		client: Socket,
-		payload: { chatId: number; userId: number }
+	async startTyping(
+		@ConnectedSocket() client: Socket,
+		@MessageBody()
+		{ chatId, userId }: { chatId: number; userId: number }
 	): Promise<void> {
-		const chat = await this.chatService.findOne(payload.chatId)
-		const user = await this.userService.findOneById(payload.userId)
-		if (!chat) throw new NotFoundException('Chat not found')
-		if (!user) throw new NotFoundException('User not found')
+		try {
+			const chat = await this.chatService.findOne(chatId)
+			const user = await this.userService.findOneById(userId)
 
-		if (!chat.typing.find(u => u.id === user.id)) {
-			chat.typing.push(user)
-			await this.chatService.save(chat)
-			this.server.to(`chat_${payload.chatId}`).emit('typing', chat.typing)
+			if (!chat) throw new NotFoundException('Chat not found')
+			if (!user) throw new NotFoundException('User not found')
+
+			if (!chat.typing.find(u => u.id === user.id)) {
+				chat.typing.push(user)
+				await this.chatService.save(chat)
+				// console.log(`User ${user.id} started typing in chat ${chat.id}`)
+				this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
+			}
+		} catch (error) {
+			console.error('Error handling start typing:', error)
+			client.emit('error', { message: error.message })
 		}
 	}
 
 	@SubscribeMessage('stop-typing')
-	async handleStopTyping(
-		client: Socket,
-		payload: { chatId: number; userId: number }
+	async stopTyping(
+		@ConnectedSocket() client: Socket,
+		@MessageBody()
+		{ chatId, userId }: { chatId: number; userId: number }
 	): Promise<void> {
-		const chat = await this.chatService.findOne(payload.chatId)
-		const user = await this.userService.findOneById(payload.userId)
-		if (!chat) throw new NotFoundException('Chat not found')
-		if (!user) throw new NotFoundException('User not found')
+		try {
+			const chat = await this.chatService.findOne(chatId)
+			const user = await this.userService.findOneById(userId)
 
-		chat.typing = chat.typing.filter(u => u.id !== user.id)
-		await this.chatService.save(chat)
-		this.server.to(`chat_${payload.chatId}`).emit('typing', chat.typing)
+			if (!chat) throw new NotFoundException('Chat not found')
+			if (!user) throw new NotFoundException('User not found')
+
+			chat.typing = chat.typing.filter(u => u.id !== user.id)
+			await this.chatService.save(chat)
+
+			// console.log(`User ${user.id} stopped typing in chat ${chat.id}`)
+			this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
+		} catch (error) {
+			console.error('Error handling stop typing:', error)
+			client.emit('error', { message: error.message })
+		}
 	}
 }

@@ -21,10 +21,9 @@ export class Chat {
     name: string;
 
     @Column({
-        default: 'https://image.flaticon.com/icons/png/512/3135/3135715.png',
         nullable: true
     })
-    img: string;
+    avatar: string;
 
     @Column({
         type: 'boolean',

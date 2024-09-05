@@ -2,7 +2,8 @@ import { Chat } from 'src/chat/chat.entity'
 import { User } from 'src/user/user.entity'
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 
-@Entity()
+@Entity(
+)
 export class Message {
 	@PrimaryGeneratedColumn()
 	id: number
@@ -21,4 +22,16 @@ export class Message {
 		default: false
 	})
 	isRead: boolean
+
+	@Column({
+		type: 'timestamp',
+		default: () => 'CURRENT_TIMESTAMP'
+	})
+	sendTime: Date
+
+	@Column({
+		type: 'boolean',
+		default: false
+	})
+	isEdited: boolean
 }

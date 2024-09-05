@@ -36,7 +36,7 @@ export class AuthService {
 				secreteKeyJwtHash: await this.createSecreteKeyJwtHash(
 					user.id,
 					user.email
-				)
+				), isVerified: true
 			})
 			return {
 				tokens: await this.validatePayload(existingUser),
@@ -83,7 +83,7 @@ export class AuthService {
 		}
 		return {
 			tokens: await this.validatePayload(user),
-			isVerified: user.isVerified
+			isVerified: true
 		}
 	}
 
@@ -99,11 +99,11 @@ export class AuthService {
 				dto.password,
 				dto.email
 			),
-			isVerified: false
+			isVerified: true
 		})
 		return {
 			tokens: await this.validatePayload(user as TypeUserData),
-			isVerified: false
+			isVerified: true
 		}
 	}
 
@@ -118,7 +118,6 @@ export class AuthService {
 		const user = await this.userService.findOneById(id)
 		if (!user) throw new UnauthorizedException('User not found')
 		const code = this.genCode()
-		console.log(user.email)
 		this.mailService.sendMail({
 			to: user.email,
 			from: "'No Reply' <Yq7pU@example.com>",
@@ -177,7 +176,7 @@ export class AuthService {
 		// Убедимся, что свойство exp отсутствует
 		const { exp, ...restPayload } = payload
 		return {
-			accessToken: this.jwtService.sign(restPayload, { expiresIn: '1h' }),
+			accessToken: this.jwtService.sign(restPayload, { expiresIn: '1year' }),
 			refreshToken: this.jwtService.sign(restPayload, { expiresIn: '30d' })
 		}
 	}

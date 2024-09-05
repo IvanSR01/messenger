@@ -15,7 +15,7 @@ export class UserService {
 	async findOneById(id: number): Promise<User> {
 		return this.userRepository.findOne({
 			where: { id },
-			relations: ['contact'] // Загрузить поле contact
+			relations: ['contact', 'chats'] // Загрузить поле contact
 		})
 	}
 	async findOneByOAuth(id: string) {

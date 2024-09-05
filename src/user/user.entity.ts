@@ -38,6 +38,18 @@ export class User {
 	@Column({ default: '' })
 	fullName: string
 
+	@Column({
+	type: 'jsonb',
+		default: {
+			isOnline: false,
+			lastSeen: new Date()
+		}
+	})
+	status: {
+		isOnline: boolean
+		lastSeen: Date
+	}
+
 	@Column()
 	secreteKeyJwtHash: string
 

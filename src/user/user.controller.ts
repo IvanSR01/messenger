@@ -3,6 +3,7 @@ import {
 	Controller,
 	Delete,
 	Get,
+	Param,
 	Patch,
 	Put,
 	Query
@@ -19,6 +20,12 @@ export class UserController {
 	@Get()
 	async findAll(@Query('search') search?: string) {
 		return await this.userService.findAll(search)
+	}
+
+	@Get(`/by-id/:id`)
+	@Auth()
+	async findOneById(@Param('id') id: number) {
+		return await this.userService.findOneById(id)
 	}
 
 	@Get('info-profile')

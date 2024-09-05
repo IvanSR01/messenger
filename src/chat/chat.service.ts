@@ -1,3 +1,4 @@
+import { UserRepository } from './../user/user.repository'
 import {
 	ConflictException,
 	Injectable,
@@ -17,23 +18,27 @@ export class ChatService {
 		private readonly chatRepository: Repository<Chat>,
 		private readonly userService: UserService
 	) {}
+	async findAll(operationUserId: number): Promise<any[]> {
+		const user = await this.userService.findOneById(operationUserId)
+		const chats = await this.chatRepository.find({
+			relations: ['users', 'messages', 'typing', 'pinnedByUsers']
+		})
 
-	async findAll(operationUserId: number): Promise<Chat[]> {
-		console.log(operationUserId)
-		const query = this.chatRepository
-			.createQueryBuilder('chat')
-			.leftJoinAndSelect('chat.users', 'user')
-			.leftJoinAndSelect('chat.messages', 'message')
-			.where('user.id = :operationUserId', { operationUserId })
+		chats.filter(chat => chat.users.includes(user))
 
-		console.log(query.getSql()) // Для отладки, вывод SQL запроса
-		return await query.getMany()
+		chats.forEach(chat => {
+			chat.messages.sort(
+				(a, b) =>
+					new Date(a.sendTime).getTime() - new Date(b.sendTime).getTime()
+			)
+		})
+		return chats
 	}
 
-	findOne(id: number): Promise<Chat> {
-		return this.chatRepository.findOne({
+	async findOne(id: number): Promise<Chat> {
+		return await this.chatRepository.findOne({
 			where: { id: id },
-			relations: ['users', 'messages', 'typing']
+			relations: ['messages', 'users', 'typing', 'pinnedByUsers']
 		})
 	}
 
@@ -82,11 +87,11 @@ export class ChatService {
 					user.id,
 					lastUser.id
 				)
-				if (!dto.isPersonal && !isInContacts) {
-					throw new ConflictException(
-						'You cannot add a person to a group chat who does not have you in contacts'
-					)
-				}
+				// if (!dto.isPersonal && !isInContacts) {
+				// 	throw new ConflictException(
+				// 		'You cannot add a person to a group chat who does not have you in contacts'
+				// 	)
+				// }
 
 				users.push(user)
 			}
