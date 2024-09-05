@@ -44,38 +44,38 @@ export class ChatGateway
 		// console.log(`Client disconnected: ${client.id}`)
 	}
 
-	@SubscribeMessage('join-chat')
-	handleJoinChat(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() { userId }: { userId: number }
-	): void {
-		const roomName = `user_${userId}`
-		client.join(roomName)
-		console.log(`Client ${client.id} joined room ${roomName}`)
-	}
+	// @SubscribeMessage('join-chat')
+	// handleJoinChat(
+	// 	@ConnectedSocket() client: Socket,
+	// 	@MessageBody() { userId }: { userId: number }
+	// ): void {
+	// 	const roomName = `user_${userId}`
+	// 	client.join(roomName)
+	// 	console.log(`Client ${client.id} joined room ${roomName}`)
+	// }
 
-	@SubscribeMessage('leave-chat')
-	handleLeaveChat(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() { userId }: { userId: number }
-	): void {
-		const roomName = `user_${userId}`
-		client.leave(roomName)
-		console.log(`Client ${client.id} left room ${roomName}`)
-	}
+	// @SubscribeMessage('leave-chat')
+	// handleLeaveChat(
+	// 	@ConnectedSocket() client: Socket,
+	// 	@MessageBody() { userId }: { userId: number }
+	// ): void {
+	// 	const roomName = `user_${userId}`
+	// 	client.leave(roomName)
+	// 	console.log(`Client ${client.id} left room ${roomName}`)
+	// }
 
-	@SubscribeMessage('get-chats')
-	async getChats(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() { userId }: { userId: number }
-	): Promise<void> {
-		try {
-			const chats = await this.chatService.findAll(userId)
+	// @SubscribeMessage('get-chats')
+	// async getChats(
+	// 	@ConnectedSocket() client: Socket,
+	// 	@MessageBody() { userId }: { userId: number }
+	// ): Promise<void> {
+	// 	try {
+	// 		const chats = await this.chatService.findAll(userId)
 
-			this.server.to(`user_${userId}`).emit('get-chats', chats)
-		} catch (error) {
-			console.error('Error getting chats:', error)
-			this.server.emit('error', { message: error.message })
-		}
-	}
+	// 		this.server.to(`user_${userId}`).emit('get-chats', chats)
+	// 	} catch (error) {
+	// 		console.error('Error getting chats:', error)
+	// 		this.server.emit('error', { message: error.message })
+	// 	}
+	// }
 }

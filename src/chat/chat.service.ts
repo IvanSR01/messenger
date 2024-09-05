@@ -20,11 +20,11 @@ export class ChatService {
 	) {}
 	async findAll(operationUserId: number): Promise<any[]> {
 		const user = await this.userService.findOneById(operationUserId)
-		const chats = await this.chatRepository.find({
+		let chats = await this.chatRepository.find({
 			relations: ['users', 'messages', 'typing', 'pinnedByUsers']
 		})
 
-		chats.filter(chat => chat.users.includes(user))
+		chats = chats.filter(chat => chat.users.includes(user))
 
 		chats.forEach(chat => {
 			chat.messages.sort(

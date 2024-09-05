@@ -36,7 +36,7 @@ export class UploadController {
             .fill(null)
             .map(() => Math.round(Math.random() * 16).toString(16))
             .join('');
-          callback(null, `${randomName}${extname(file.originalname)}`);
+          callback(null, `${randomName}${extname(file.originalname)}.${file.mimetype.split('/')[1]}`);
         },
       }),
     }),

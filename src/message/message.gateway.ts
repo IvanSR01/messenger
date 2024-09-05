@@ -73,6 +73,7 @@ export class MessageGateway
 		try {
 			const chats = await this.chatService.findAll(userId)
 
+			
 
 			this.server.to(`user_${userId}`).emit('get-chats', chats)
 		} catch (error) {
