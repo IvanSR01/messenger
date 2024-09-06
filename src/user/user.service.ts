@@ -48,8 +48,18 @@ export class UserService {
 		return new ConflictException('Email or username is already in use')
 	}
 	async updateUser(id: number, dto: Partial<User>) {
-		return await this.userRepository.update({ id: id }, dto)
+		// Находим пользователя с его контактами
+		const user = await this.userRepository.findOne({ where: { id }, relations: ['contact'] });
+		
+		if (dto.contact) {
+			// Обновляем контакты, если они переданы
+			user.contact = dto.contact;
+		}
+	
+		// Сохраняем изменения
+		return await this.userRepository.save(dto);
 	}
+	
 	async toggleContactUser(myId: number, userId: number) {
 		const myProfile = await this.findOneById(myId)
 		const user = await this.findOneById(userId)

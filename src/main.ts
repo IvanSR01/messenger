@@ -7,7 +7,7 @@ async function bootstrap() {
 	app.enableShutdownHooks()
 	app.enableCors({
 		origin: '*',
-		methods: ['GET', 'POST', 'PUt', 'DELETE'],
+		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		credentials: true
 	})
   app.useWebSocketAdapter(new CustomIoAdapter(app));

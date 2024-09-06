@@ -60,7 +60,7 @@ export class AuthController {
 		const user = req.user
 		const { tokens, isVerified } = await this.authService.githubLogin(user)
 		const redirectUrl = this.configService.get<string>('REDIRECT_URL')
-		if (isVerified) res.redirect('http://localhost:3000/dashboard/main')
+		if (isVerified) res.redirect(`${redirectUrl}/dashboard/chats?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`)
 		res.redirect(
 			`${'http://localhost:3000/auth/email'}?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
 		)
