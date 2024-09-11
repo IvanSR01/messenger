@@ -46,6 +46,7 @@ export class MessageGateway
 	}
 
 	@SubscribeMessage('join-room')
+
 	handleJoinRoom(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() { userId }: { userId: number }
@@ -138,7 +139,6 @@ export class MessageGateway
 
 			await this.messageService.create(content, chat, user)
 
-			// Отправка сообщения в комнату
 			this.server.to(`chat_${chatId}`).emit('new-message', {
 				chatId,
 				userId,
@@ -147,7 +147,6 @@ export class MessageGateway
 			await chat.users.forEach(async user => {
 				await this.getChats(client, { userId: user.id })
 			})
-			// Обновление сообщений для всех в комнате
 			await this.getMessages(client, { chatId })
 		} catch (error) {
 			console.error('Error sending message:', error)
@@ -155,8 +154,6 @@ export class MessageGateway
 		}
 	}
 
-	// Остальные методы (update-message, mark-as-read, start-typing, stop-typing) остаются без изменений,
-	// так как они уже корректно работают с комнатами через this.server.to(`chat_${chatId}`).emit(...).
 
 	@SubscribeMessage('update-message')
 	async updateMessage(
@@ -171,7 +168,6 @@ export class MessageGateway
 	): Promise<void> {
 		try {
 			await this.messageService.update(messageId, content)
-			// Обновление сообщений в комнате
 			await this.getMessages(client, { chatId })
 		} catch (error) {
 			console.error('Error updating message:', error)
@@ -219,7 +215,6 @@ export class MessageGateway
 			if (!chat.typing.find(u => u.id === user.id)) {
 				chat.typing.push(user)
 				await this.chatService.save(chat)
-				// console.log(`User ${user.id} started typing in chat ${chat.id}`)
 				this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
 			}
 		} catch (error) {
@@ -244,7 +239,6 @@ export class MessageGateway
 			chat.typing = chat.typing.filter(u => u.id !== user.id)
 			await this.chatService.save(chat)
 
-			// console.log(`User ${user.id} stopped typing in chat ${chat.id}`)
 			this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
 		} catch (error) {
 			console.error('Error handling stop typing:', error)

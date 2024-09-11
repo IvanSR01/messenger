@@ -12,6 +12,7 @@ import { GithubStrategy } from './strategies/github.strategy'
 import { GoogleStrategy } from './strategies/google.startegy'
 import { GoogleAuthGuard } from './guard/google-auth.guard'
 import { MailModule } from 'src/mail/mail.module'
+import { OnlyAdminGuard } from './guard/admin.guard'
 
 @Module({
 	imports: [
@@ -36,7 +37,8 @@ import { MailModule } from 'src/mail/mail.module'
 		GithubAuthGuard,
 		JwtAuthGuard,
 		GoogleStrategy,
-		GoogleAuthGuard
+		GoogleAuthGuard,
+		OnlyAdminGuard
 	]
 })
 export class AuthModule {}

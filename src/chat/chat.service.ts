@@ -20,22 +20,33 @@ export class ChatService {
 	) {}
 	async findAll(operationUserId: number): Promise<any[]> {
 		const user = await this.userService.findOneById(operationUserId)
+
 		let chats = await this.chatRepository.find({
 			relations: ['users', 'messages', 'typing', 'pinnedByUsers']
 		})
 
-		const newChat = chats.filter(chat => {
-			console.log(chat.users.some(userId => userId.id === user.id)); // Например, если `user` - это объект с `id`
-			return chat.users.some(userId => userId.id === user.id); // Предположим, что `chat.users` - это массив ID
-		});
-		
-		newChat.forEach(chat => {
+		const userChats = chats.filter(chat =>
+			chat.users.some(chatUser => chatUser.id === user.id)
+		)
+
+		userChats.forEach(chat => {
 			chat.messages.sort(
 				(a, b) =>
-					new Date(a.sendTime).getTime() - new Date(b.sendTime).getTime()
+					new Date(b.sendTime).getTime() - new Date(a.sendTime).getTime()
 			)
 		})
-		return newChat
+
+		userChats.sort((a, b) => {
+			const lastMessageA = a.messages.length
+				? new Date(a.messages[a.messages.length - 1].sendTime).getTime()
+				: 0
+			const lastMessageB = b.messages.length
+				? new Date(b.messages[b.messages.length - 1].sendTime).getTime()
+				: 0
+			return lastMessageB - lastMessageA
+		})
+
+		return userChats
 	}
 
 	async findOne(id: number): Promise<Chat> {

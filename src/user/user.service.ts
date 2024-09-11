@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from './user.entity'
-
+import * as bcrypt from 'bcrypt'
 @Injectable()
 export class UserService {
 	constructor(
@@ -33,13 +33,16 @@ export class UserService {
 		return await this.userRepository.find({})
 	}
 
-  async areUsersInContacts(userId: number, contactId: number): Promise<boolean> {
-    const user = await this.userRepository.findOne({
+	async areUsersInContacts(
+		userId: number,
+		contactId: number
+	): Promise<boolean> {
+		const user = await this.userRepository.findOne({
 			where: { id: userId },
-			relations: ['contact'],
-		});
-    return user?.contact.some(contact => contact.id === contactId) ?? false;
-  }
+			relations: ['contact']
+		})
+		return user?.contact.some(contact => contact.id === contactId) ?? false
+	}
 	async createUser(dto: Partial<User>) {
 		const user = await this.findOneByEmail(dto.email)
 		if (!user) {
@@ -49,17 +52,23 @@ export class UserService {
 	}
 	async updateUser(id: number, dto: Partial<User>) {
 		// Находим пользователя с его контактами
-		const user = await this.userRepository.findOne({ where: { id }, relations: ['contact'] });
-		
+		const user = await this.userRepository.findOne({
+			where: { id },
+			relations: ['contact']
+		})
+
 		if (dto.contact) {
 			// Обновляем контакты, если они переданы
-			user.contact = dto.contact;
+			user.contact = dto.contact
 		}
-	
+		if (dto.password) {
+			dto.password = await bcrypt.hash(dto.password, await bcrypt.genSalt(10))
+		}
+
 		// Сохраняем изменения
-		return await this.userRepository.save(dto);
+		return await this.userRepository.save(dto)
 	}
-	
+
 	async toggleContactUser(myId: number, userId: number) {
 		const myProfile = await this.findOneById(myId)
 		const user = await this.findOneById(userId)

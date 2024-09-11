@@ -46,26 +46,29 @@ export class UserGateway
 		@ConnectedSocket() client: Socket
 	): Promise<void> {
 		const user = await this.userService.findOneById(data.userId)
-
+	
 		if (!user) throw new NotFoundException('User not found')
-
-		if (data.status === 'online') {
+	
+		console.log(data)
+	
+		if (data.status === 'offline') {
+			// Когда пользователь оффлайн, ставим isOnline: false и обновляем lastSeen
 			await this.userService.updateUser(user.id, {
 				status: {
-					isOnline: true,
-					lastSeen: new Date()
+					isOnline: false, // Исправлено на false
+					lastSeen: new Date() // Обновляем lastSeen при выходе пользователя
 				}
 			})
-		} else if (data.status === 'offline') {
+		} else if (data.status === 'online') {
+			// Когда пользователь онлайн, ставим isOnline: true, lastSeen можно не обновлять
 			await this.userService.updateUser(user.id, {
 				status: {
-					isOnline: false,
+					isOnline: true, // Исправлено на true
 					lastSeen: new Date()
 				}
 			})
 		}
 	}
-
 	@SubscribeMessage('user-status')
 	async getUserStatus(
 		@MessageBody() data: { userId: number },

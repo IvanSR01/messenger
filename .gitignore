@@ -61,5 +61,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /uploads/message/audio/*
 /uploads/message/video/*
 /uploads/message/image/*
+/uploads/message/application/*
 /uploads/user/image/*
 /uploads/user/video/*

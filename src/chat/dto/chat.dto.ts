@@ -3,4 +3,5 @@ export class CreateChatDto {
 	isPersonal: boolean
 	name: string
 	img: string
+	background?: string
 }

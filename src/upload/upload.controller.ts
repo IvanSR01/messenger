@@ -23,7 +23,6 @@ export class UploadController {
         destination: (req, file, callback) => {
           const { folder, subFolder } = req.params;
           const path = `./uploads/${folder}/${subFolder}`;
-
           // Проверяем, существует ли директория. Если нет, создаем ее.
           if (!existsSync(path)) {
             mkdirSync(path, { recursive: true });
