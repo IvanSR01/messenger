@@ -15,5 +15,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 		EventEmitterModule.forRoot(),
   ],
   providers: [MessageService, MessageGateway],
+	exports: [MessageGateway],
 })
 export class MessageModule {}

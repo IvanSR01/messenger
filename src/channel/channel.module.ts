@@ -4,11 +4,12 @@ import { ChannelController } from './channel.controller'
 import { UserService } from 'src/user/user.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Channel } from './channel.entity'
+import { UserModule } from 'src/user/user.module'
 
 @Module({
-	imports: [UserService, TypeOrmModule.forFeature([Channel])],
+	imports: [ TypeOrmModule.forFeature([Channel]), UserModule,],
 	providers: [ChannelService],
 	controllers: [ChannelController],
-	exports: [ChannelService],
+	exports: [ChannelService]
 })
 export class ChannelModule {}

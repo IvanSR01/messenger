@@ -30,10 +30,12 @@ export class ChatService {
 		)
 
 		userChats.forEach(chat => {
-			chat.messages.sort(
-				(a, b) =>
-					new Date(b.sendTime).getTime() - new Date(a.sendTime).getTime()
-			)
+			chat.messages
+				.sort(
+					(a, b) =>
+						new Date(b.sendTime).getTime() - new Date(a.sendTime).getTime()
+				)
+				.reverse()
 		})
 
 		userChats.sort((a, b) => {
@@ -120,9 +122,37 @@ export class ChatService {
 		await this.chatRepository.save(chat)
 		return chat
 	}
-	async update(id: number, chatData: Partial<Chat>): Promise<Chat> {
-		await this.chatRepository.update(id, chatData)
-		return this.chatRepository.findOne({ where: { id: id } })
+
+	async toggleUser(chatId: number, userId: number): Promise<Chat> {
+		const chat = await this.chatRepository.findOne({
+			where: { id: chatId },
+			relations: ['users']
+		})
+		if (!chat) {
+			throw new NotFoundException(`Chat with ID ${chatId} not found`)
+		}
+		if (!chat.users.some(user => user.id === userId)) {
+			chat.users.push(await this.userService.findOneById(userId))
+		} else {
+			chat.users = chat.users.filter(user => user.id !== userId)
+		}
+		await this.chatRepository.save(chat)
+		return chat
+	}
+
+	async update(id: number, chat: Partial<Chat>) {
+		const chatToUpdate = await this.chatRepository.findOne({
+			where: { id: chat.id }
+		})
+		if (!chatToUpdate)
+			throw new NotFoundException(`Chat with ID ${chat.id} not found`)
+		const chatData = {
+			isPersonal: chat.isPersonal,
+			name: chat.name,
+			avatar: chat.avatar,
+			background: chat.background
+		}
+		return await this.chatRepository.save({ ...chatToUpdate, ...chatData })
 	}
 
 	async remove(id: number): Promise<void> {

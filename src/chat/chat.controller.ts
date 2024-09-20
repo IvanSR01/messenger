@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Patch,
+	Post,
+	Put
+} from '@nestjs/common'
 import { ChatService } from './chat.service'
 import { UserData } from 'src/user/decorators/user.decorator'
 import { Auth } from 'src/auth/decorators/auth.decorator'
@@ -39,6 +48,12 @@ export class ChatController {
 		@Body() chatData: Partial<Chat>
 	) {
 		return await this.chatService.update(id, chatData)
+	}
+
+	@Patch('toggle-user/:id')
+	@Auth()
+	async toggleUser(@Body('id') id: number, @Param('id') chatId: number) {
+		return await this.chatService.toggleUser(chatId, id)
 	}
 
 	@Delete('delete-chat')

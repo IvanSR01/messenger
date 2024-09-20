@@ -9,14 +9,18 @@ import { ChatModule } from './chat/chat.module'
 import { CommentModule } from './comment/comment.module'
 import { MailModule } from './mail/mail.module'
 import { Message } from './message/message.entity'
-import { MessageModule } from './message/message.module'; // Импортировать MessageModule
+import { MessageModule } from './message/message.module' // Импортировать MessageModule
 import { PinnedChat } from './pinned/pinned.entity'
 import { PostModule } from './post/post.module'
-import { ReactionController } from './reaction/reaction.controller'
 import { ReactionModule } from './reaction/reaction.module'
 import { UploadModule } from './upload/upload.module'
 import { User } from './user/user.entity'
 import { UserModule } from './user/user.module'
+import { Post } from './post/post.entity'
+import { Reaction } from './reaction/reaction.entity'
+import { ReactionType } from './reaction/reaction-type.entity'
+import { Channel } from './channel/channel.entity'
+import { Comment } from './comment/comment.entity'
 
 @Module({
 	imports: [
@@ -36,11 +40,21 @@ import { UserModule } from './user/user.module'
 				username: configService.get<string>('DB_USER'),
 				password: configService.get<string>('DB_PASSWORD'),
 				database: configService.get<string>('DB_NAME'),
-				entities: [User, Chat, Message, PinnedChat],
+				entities: [
+					User,
+					Chat,
+					Message,
+					PinnedChat,
+					Post,
+					Reaction,
+					ReactionType,
+					Channel,
+					Comment
+				],
 				synchronize: true // В продакшене рекомендуется установить false
 			})
 		}),
-		AuthModule,	// Другие модули
+		AuthModule, // Другие модули
 		UserModule,
 		ChatModule,
 		MessageModule,
@@ -53,6 +67,6 @@ import { UserModule } from './user/user.module'
 		// PinnedModule // Добавить MessageModule,
 	],
 	providers: [],
-	controllers: [ReactionController]
+	controllers: []
 })
 export class AppModule {}

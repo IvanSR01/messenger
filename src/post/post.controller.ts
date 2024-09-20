@@ -12,8 +12,9 @@ import { PostService } from './post.service'
 import { UserData } from 'src/user/decorators/user.decorator'
 import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
+import { Auth } from 'src/auth/decorators/auth.decorator'
 
-@Controller('posts')
+@Controller('post')
 export class PostController {
 	constructor(private readonly postService: PostService) {}
 
@@ -27,6 +28,7 @@ export class PostController {
 		return await this.postService.findOne(id)
 	}
 
+	@Auth()
 	@Post('create')
 	async createPost(@Body() dto: CreatePostDto, @UserData('id') id: number) {
 		return await this.postService.createPost({ ...dto, userId: id })

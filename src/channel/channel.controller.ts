@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	Param,
+	Patch,
+	Post,
+	Put
+} from '@nestjs/common'
 import { ChannelService } from './channel.service'
 import { Channel } from './channel.entity'
 import { Auth } from 'src/auth/decorators/auth.decorator'
@@ -19,6 +28,12 @@ export class ChannelController {
 		return await this.channelService.findOne(id)
 	}
 
+	@Get('/sub/')
+	@Auth()
+	async findMySubsChannel(@UserData('id') id: number): Promise<Channel[]> {
+		return await this.channelService.findMySubsChannel(id)
+	}
+
 	@Post('/create')
 	@Auth()
 	async save(
@@ -32,14 +47,31 @@ export class ChannelController {
 	@Auth()
 	async update(
 		@Param('id') id: number,
-		@Body() channel: Channel
+		@Body() channel: Channel,
+		@UserData('id') userId: number
 	): Promise<string> {
-		return await this.channelService.update(id, channel)
+		return await this.channelService.update({
+			channel,
+			userId: userId,
+			channelId: id
+		})
+	}
+
+	@Patch('/toggle-subscription/:id')
+	@Auth()
+	async toggleSubscription(
+		@Param('id') id: number,
+		@UserData('id') userId: number
+	) {
+		return await this.channelService.toggleSubscription(id, userId)
 	}
 
 	@Delete('/delete/:id')
 	@Auth()
-	async remove(@Param('id') id: number, @UserData('id') userId: number): Promise<void> {
+	async remove(
+		@Param('id') id: number,
+		@UserData('id') userId: number
+	): Promise<void> {
 		await this.channelService.remove(id, userId)
 	}
 }

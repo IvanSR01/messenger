@@ -10,6 +10,7 @@ import {
 	OneToMany,
 	PrimaryGeneratedColumn
 } from 'typeorm'
+import { EntityRepository, Repository } from 'typeorm'
 
 @Entity()
 export class Post {
@@ -19,13 +20,21 @@ export class Post {
 	@Column()
 	content: string
 
-	@Column()
-	linkId: number
+	@Column({
+		nullable: true
+	})
+	linkId: number | null
 
 	@Column({
 		default: 0
 	})
 	view: number
+
+	@Column({
+		type: 'timestamp',
+		default: () => 'CURRENT_TIMESTAMP'
+	})
+	sendTime: Date
 
 	@OneToMany(() => Reaction, reaction => reaction.post)
 	@JoinTable()
@@ -43,3 +52,6 @@ export class Post {
 	@JoinTable()
 	comments: Comment[]
 }
+
+@EntityRepository(Post)
+export class PostRepository extends Repository<Post> {}

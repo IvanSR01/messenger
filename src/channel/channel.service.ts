@@ -19,11 +19,29 @@ export class ChannelService {
 	) {}
 
 	async findAll(): Promise<Channel[]> {
-		return await this.channelRepository.find()
+		return await this.channelRepository.find({
+			relations: ['author', 'subscriptions']
+		})
+	}
+
+	async findMySubsChannel(userId: number): Promise<Channel[]> {
+		const user = await this.userService.findOneById(userId)
+
+		if (!user) throw new NotFoundException('User not found')
+
+		return await this.channelRepository.find({
+			where: { subscriptions: { id: userId } },
+			relations: ['author', 'subscriptions']
+		})
 	}
 
 	async findOne(id: number): Promise<Channel> {
-		return await this.channelRepository.findOneBy({ id })
+		return await this.channelRepository.findOne({
+			where: {
+				id
+			},
+			relations: ['author', 'subscriptions']
+		})
 	}
 
 	async save(dto: CreateChannelDto): Promise<Channel> {
@@ -31,9 +49,11 @@ export class ChannelService {
 
 		if (!user) throw new NotFoundException('User not found')
 
+		console.log(dto)
+
 		return await this.channelRepository.save({
 			...dto,
-			user,
+			author: user,
 			link: await this.genLink(dto.name)
 		})
 	}
@@ -54,6 +74,33 @@ export class ChannelService {
 			throw new ForbiddenException('You are not allowed to update this channel')
 
 		await this.channelRepository.update({ id: channelToUpdate.id }, channel)
+
+		return 'success'
+	}
+
+	async toggleSubscription(channelId: number, userId: number) {
+		const user = await this.userService.findOneById(userId)
+
+		if (!user) throw new NotFoundException('User not found')
+
+		const channel = await this.channelRepository.findOne({
+			where: {
+				id: channelId
+			},
+			relations: ['subscriptions', 'author']
+		})
+
+		if (!channel) throw new NotFoundException('Channel not found')
+
+		if (channel.subscriptions.some(subscriber => subscriber.id === userId)) {
+			channel.subscriptions = channel.subscriptions.filter(
+				subscriber => subscriber.id !== userId
+			)
+		} else {
+			channel.subscriptions.push(user)
+		}
+
+		await this.channelRepository.save(channel)
 
 		return 'success'
 	}

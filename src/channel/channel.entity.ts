@@ -27,6 +27,9 @@ export class Channel {
 	@Column()
 	link: string
 
+	@Column({ nullable: true })
+	background: string | null
+
 	@ManyToOne(() => User, user => user.channelCreation)
 	@JoinTable()
 	author: User

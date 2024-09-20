@@ -199,50 +199,5 @@ export class MessageGateway
 		}
 	}
 
-	@SubscribeMessage('start-typing')
-	async startTyping(
-		@ConnectedSocket() client: Socket,
-		@MessageBody()
-		{ chatId, userId }: { chatId: number; userId: number }
-	): Promise<void> {
-		try {
-			const chat = await this.chatService.findOne(chatId)
-			const user = await this.userService.findOneById(userId)
-
-			if (!chat) throw new NotFoundException('Chat not found')
-			if (!user) throw new NotFoundException('User not found')
-
-			if (!chat.typing.find(u => u.id === user.id)) {
-				chat.typing.push(user)
-				await this.chatService.save(chat)
-				this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
-			}
-		} catch (error) {
-			console.error('Error handling start typing:', error)
-			client.emit('error', { message: error.message })
-		}
-	}
-
-	@SubscribeMessage('stop-typing')
-	async stopTyping(
-		@ConnectedSocket() client: Socket,
-		@MessageBody()
-		{ chatId, userId }: { chatId: number; userId: number }
-	): Promise<void> {
-		try {
-			const chat = await this.chatService.findOne(chatId)
-			const user = await this.userService.findOneById(userId)
-
-			if (!chat) throw new NotFoundException('Chat not found')
-			if (!user) throw new NotFoundException('User not found')
-
-			chat.typing = chat.typing.filter(u => u.id !== user.id)
-			await this.chatService.save(chat)
-
-			this.server.to(`chat_${chatId}`).emit('typing', chat.typing)
-		} catch (error) {
-			console.error('Error handling stop typing:', error)
-			client.emit('error', { message: error.message })
-		}
-	}
+	
 }

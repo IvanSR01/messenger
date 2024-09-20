@@ -35,10 +35,14 @@ export class Message {
 	isEdited: boolean
 
 	@Column({
-		type: 'jsonb'
+		type: 'jsonb',
+		default: {
+			id: null,
+			type: 'message'
+		}
 	})
 	linkMessage: {
-		id: number
+		id: number | null
 		type: 'message' | 'channel'
 	}
 }
