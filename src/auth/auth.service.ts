@@ -129,6 +129,7 @@ export class AuthService {
 
 	async updateTokens(refreshToken: string) {
 		const payload = this.jwtService.decode(refreshToken)
+		console.log(payload, refreshToken)
 		const user = await this.userService.findOneById(payload.sub)
 		const isValid = user.secreteKeyJwtHash === payload.secreteKeyJwtHash
 
