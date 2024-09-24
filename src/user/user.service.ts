@@ -65,8 +65,8 @@ export class UserService {
 			dto.password = await bcrypt.hash(dto.password, await bcrypt.genSalt(10))
 		}
 
-		// Сохраняем изменения
-		return await this.userRepository.save(dto)
+
+		return await this.userRepository.save({...dto})
 	}
 
 	async toggleContactUser(myId: number, userId: number) {

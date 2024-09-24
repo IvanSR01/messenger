@@ -12,7 +12,7 @@ import { Message } from 'src/message/message.entity'
 import { PinnedChat } from 'src/pinned/pinned.entity'
 import { Chat } from 'src/chat/chat.entity'
 import { Channel } from 'src/channel/channel.entity'
-import { Post } from 'src/post/post.entity';
+import { Post } from 'src/post/post.entity'
 import { Reaction } from 'src/reaction/reaction.entity'
 import { Comment } from 'src/comment/comment.entity'
 
@@ -21,7 +21,7 @@ export class User {
 	@PrimaryGeneratedColumn()
 	id: number
 
-	@Column({ unique: true, nullable: true})
+	@Column({ unique: true, nullable: true })
 	email: string
 
 	@Column({
@@ -60,6 +60,11 @@ export class User {
 		isOnline: boolean
 		lastSeen: Date
 	}
+	@Column({
+		default: 'ENG',
+		nullable: true
+	})
+	language: string
 
 	@Column()
 	secreteKeyJwtHash: string
@@ -82,7 +87,7 @@ export class User {
 	@OneToMany(() => Reaction, reaction => reaction.user)
 	reactions: Reaction[]
 
-  @OneToMany(() => Comment, comment => comment.user)
+	@OneToMany(() => Comment, comment => comment.user)
 	comments: Comment[]
 
 	@OneToMany(() => Message, message => message.user)
