@@ -21,7 +21,9 @@ import { Reaction } from './reaction/reaction.entity'
 import { ReactionType } from './reaction/reaction-type.entity'
 import { Channel } from './channel/channel.entity'
 import { Comment } from './comment/comment.entity'
-
+import { CallGateway } from './call/call.gateway'
+import { CallModule } from './call/call.module'
+import { Call } from './call/call.entity'
 @Module({
 	imports: [
 		// Настройка ConfigModule для загрузки переменных окружения из .env файла
@@ -49,7 +51,8 @@ import { Comment } from './comment/comment.entity'
 					Reaction,
 					ReactionType,
 					Channel,
-					Comment
+					Comment,
+					Call,
 				],
 				synchronize: true // В продакшене рекомендуется установить false
 			})
@@ -63,7 +66,8 @@ import { Comment } from './comment/comment.entity'
 		ChannelModule,
 		PostModule,
 		ReactionModule,
-		CommentModule
+		CommentModule,
+		CallModule
 		// PinnedModule // Добавить MessageModule,
 	],
 	providers: [],

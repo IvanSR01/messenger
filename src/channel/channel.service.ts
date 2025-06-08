@@ -20,7 +20,7 @@ export class ChannelService {
 
 	async findAll(): Promise<Channel[]> {
 		return await this.channelRepository.find({
-			relations: ['author', 'subscriptions']
+			relations: ['author', 'subscriptions', 'posts']
 		})
 	}
 
@@ -29,9 +29,11 @@ export class ChannelService {
 
 		if (!user) throw new NotFoundException('User not found')
 
+		console.log(user)
+
 		return await this.channelRepository.find({
 			where: { subscriptions: { id: userId } },
-			relations: ['author', 'subscriptions']
+			relations: ['author', 'subscriptions', 'posts']
 		})
 	}
 

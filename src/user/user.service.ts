@@ -65,8 +65,11 @@ export class UserService {
 			dto.password = await bcrypt.hash(dto.password, await bcrypt.genSalt(10))
 		}
 
+		const update = {
+			...dto, password: user.password
+		}
 
-		return await this.userRepository.save({...dto})
+		return await this.userRepository.save({...update})
 	}
 
 	async toggleContactUser(myId: number, userId: number) {
